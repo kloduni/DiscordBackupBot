@@ -3,6 +3,8 @@ namespace Backup.Core.Entities;
 public class BackupMessage
 {
     public Guid Id { get; set; }
+    public Guid BackupChannelId { get; set; }
+
     public ulong ChannelId { get; set; }
     public ulong MessageId { get; set; }
     public string Author { get; set; } = string.Empty;

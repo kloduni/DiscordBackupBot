@@ -70,6 +70,7 @@ public class BackupRepository : IBackupRepository
         {
             await _context.BackupMessages.AddRangeAsync(batch);
             await _context.SaveChangesAsync();
+            _context.ChangeTracker.Clear();
         }
     }
 

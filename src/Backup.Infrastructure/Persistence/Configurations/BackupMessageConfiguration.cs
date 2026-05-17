@@ -12,14 +12,16 @@ public class BackupMessageConfiguration : IEntityTypeConfiguration<BackupMessage
 
         builder.HasKey(x => x.Id);
 
+        builder.Property(x => x.BackupChannelId)
+            .IsRequired();
+
         builder.Property(x => x.ChannelId)
             .IsRequired();
 
         builder.Property(x => x.MessageId)
             .IsRequired();
 
-        builder.HasIndex(x => x.MessageId)
-            .IsUnique();
+        builder.HasIndex(x => x.MessageId);
 
         builder.Property(x => x.Author)
             .IsRequired()

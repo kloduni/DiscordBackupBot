@@ -52,6 +52,10 @@ public class SlashCommandHandler
                         await HandleRestoreAsync(command);
                         break;
 
+                    case "backup-resume":
+                        await HandleResumeAsync(command);
+                        break;
+
                     default:
                         await command.RespondAsync($"Unknown command: `{command.CommandName}`", ephemeral: true);
                         break;
@@ -101,6 +105,21 @@ public class SlashCommandHandler
             return;
         }
 
-        await _restorationService.ExecuteAsync(command, backupId);
+        var forceOption = command.Data.Options.FirstOrDefault(o => o.Name == "force");
+        bool force = forceOption?.Value is bool f && f;
+
+        await _restorationService.ExecuteAsync(command, backupId, force);
+    }
+
+    private async Task HandleResumeAsync(SocketSlashCommand command)
+    {
+        var idOption = command.Data.Options.FirstOrDefault(o => o.Name == "id");
+        if (idOption?.Value is not string idString || !Guid.TryParse(idString, out var backupId))
+        {
+            await command.RespondAsync("❌ Invalid or missing backup ID.", ephemeral: true);
+            return;
+        }
+
+        await _extractionService.ResumeAsync(command, backupId);
     }
 }

@@ -12,20 +12,17 @@ public class RestorationService
     private const string WebhookName = "BackupRestore";
 
     private readonly IServiceScopeFactory _scopeFactory;
-    private readonly DiscordSocketClient _client;
     private readonly ILogger<RestorationService> _logger;
 
     public RestorationService(
         IServiceScopeFactory scopeFactory,
-        DiscordSocketClient client,
         ILogger<RestorationService> logger)
     {
         _scopeFactory = scopeFactory;
-        _client = client;
         _logger = logger;
     }
 
-    public async Task ExecuteAsync(SocketSlashCommand command, Guid backupId, CancellationToken cancellationToken = default)
+    public async Task ExecuteAsync(SocketSlashCommand command, Guid backupId, bool force, CancellationToken cancellationToken = default)
     {
         await command.RespondAsync("⏳ Restoration started. This may take a long time...", ephemeral: true);
 
@@ -44,6 +41,17 @@ public class RestorationService
         {
             await command.ModifyOriginalResponseAsync(m =>
                 m.Content = $"❌ No backup found with ID `{backupId}`.");
+            return;
+        }
+
+        if (backup.GuildId == guild.Id && !force)
+        {
+            await command.ModifyOriginalResponseAsync(m => m.Content =
+                "⚠️ **FAILSAFE TRIGGERED** ⚠️\n" +
+                "You are trying to restore a backup to the **exact same server** it was taken from. " +
+                "Doing this will duplicate EVERY role, category, and channel.\n\n" +
+                "• If you want to *continue* an interrupted backup, use `/backup-resume`.\n" +
+                "• If you actually want to duplicate everything (or recover a nuked server), re-run this command and set `force: True`.");
             return;
         }
 

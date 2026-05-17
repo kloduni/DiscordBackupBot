@@ -31,8 +31,7 @@ public class BackupChannelConfiguration : IEntityTypeConfiguration<BackupChannel
 
         builder.HasMany(x => x.Messages)
             .WithOne(x => x.Channel)
-            .HasForeignKey(x => x.ChannelId)
-            .HasPrincipalKey(x => x.ChannelId)
+            .HasForeignKey(x => x.BackupChannelId)
             .OnDelete(DeleteBehavior.Cascade);
     }
 }

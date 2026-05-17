@@ -12,7 +12,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Backup.Infrastructure.Migrations
 {
     [DbContext(typeof(BackupDbContext))]
-    [Migration("20260514011945_InitialCreate")]
+    [Migration("20260515232555_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />
@@ -76,6 +76,9 @@ namespace Backup.Infrastructure.Migrations
                         .HasMaxLength(500)
                         .HasColumnType("nvarchar(500)");
 
+                    b.Property<Guid>("BackupChannelId")
+                        .HasColumnType("uniqueidentifier");
+
                     b.Property<decimal>("ChannelId")
                         .HasColumnType("decimal(20,0)");
 
@@ -92,10 +95,9 @@ namespace Backup.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("ChannelId");
+                    b.HasIndex("BackupChannelId");
 
-                    b.HasIndex("MessageId")
-                        .IsUnique();
+                    b.HasIndex("MessageId");
 
                     b.ToTable("BackupMessages", (string)null);
                 });
@@ -170,8 +172,7 @@ namespace Backup.Infrastructure.Migrations
                 {
                     b.HasOne("Backup.Core.Entities.BackupChannel", "Channel")
                         .WithMany("Messages")
-                        .HasForeignKey("ChannelId")
-                        .HasPrincipalKey("ChannelId")
+                        .HasForeignKey("BackupChannelId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 

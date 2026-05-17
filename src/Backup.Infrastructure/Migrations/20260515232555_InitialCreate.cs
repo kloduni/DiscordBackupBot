@@ -1,4 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore.Migrations;
+﻿using System;
+using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
@@ -39,7 +40,6 @@ namespace Backup.Infrastructure.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_BackupChannels", x => x.Id);
-                    table.UniqueConstraint("AK_BackupChannels_ChannelId", x => x.ChannelId);
                     table.ForeignKey(
                         name: "FK_BackupChannels_ServerBackups_ServerBackupId",
                         column: x => x.ServerBackupId,
@@ -76,6 +76,7 @@ namespace Backup.Infrastructure.Migrations
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    BackupChannelId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     ChannelId = table.Column<decimal>(type: "decimal(20,0)", nullable: false),
                     MessageId = table.Column<decimal>(type: "decimal(20,0)", nullable: false),
                     Author = table.Column<string>(type: "nvarchar(200)", maxLength: 200, nullable: false),
@@ -87,10 +88,10 @@ namespace Backup.Infrastructure.Migrations
                 {
                     table.PrimaryKey("PK_BackupMessages", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_BackupMessages_BackupChannels_ChannelId",
-                        column: x => x.ChannelId,
+                        name: "FK_BackupMessages_BackupChannels_BackupChannelId",
+                        column: x => x.BackupChannelId,
                         principalTable: "BackupChannels",
-                        principalColumn: "ChannelId",
+                        principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                 });
 
@@ -100,15 +101,14 @@ namespace Backup.Infrastructure.Migrations
                 column: "ServerBackupId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_BackupMessages_ChannelId",
+                name: "IX_BackupMessages_BackupChannelId",
                 table: "BackupMessages",
-                column: "ChannelId");
+                column: "BackupChannelId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_BackupMessages_MessageId",
                 table: "BackupMessages",
-                column: "MessageId",
-                unique: true);
+                column: "MessageId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_BackupRoles_ServerBackupId",

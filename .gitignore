@@ -427,3 +427,9 @@ FodyWeavers.xsd
 *.msix
 *.msm
 *.msp
+
+# Repomix
+.repomixignore
+repomix-output.xml
+repomix-output.txt
+src/Backup.Worker/appsettings.json

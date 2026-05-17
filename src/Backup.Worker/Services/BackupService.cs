@@ -27,6 +27,13 @@ public class BackupService : IHostedService
             .WithName("backup-restore")
             .WithDescription("Restores a server backup by its ID.")
             .AddOption("id", ApplicationCommandOptionType.String, "The backup ID to restore.", isRequired: true)
+            .AddOption("force", ApplicationCommandOptionType.Boolean, "Force restore on the SAME server (WARNING: Duplicates everything)", isRequired: false)
+            .Build(),
+
+        new SlashCommandBuilder()
+            .WithName("backup-resume")
+            .WithDescription("Resumes an incomplete server backup.")
+            .AddOption("id", ApplicationCommandOptionType.String, "The backup ID to resume.", isRequired: true)
             .Build()
     ];
 
