@@ -23,6 +23,13 @@ public class BackupRepository : IBackupRepository
         return backup;
     }
 
+    public async Task<IReadOnlyList<ServerBackup>> GetAllBackupsAsync()
+    {
+        return await _context.ServerBackups
+            .OrderByDescending(b => b.CreatedAt)
+            .ToListAsync();
+    }
+
     public async Task<ServerBackup?> GetBackupAsync(Guid id)
     {
         return await _context.ServerBackups
@@ -83,12 +90,33 @@ public class BackupRepository : IBackupRepository
             .FirstOrDefaultAsync();
     }
 
-    public async Task<IReadOnlyList<BackupMessage>> GetMessagesByChannelAsync(ulong channelId)
+    public async Task<IReadOnlyList<BackupMessage>> GetMessagesByChannelAsync(ulong channelId, int skip = 0)
     {
         return await _context.BackupMessages
             .Where(m => m.ChannelId == channelId)
             .OrderBy(m => m.MessageId)
+            .Skip(skip)
             .ToListAsync();
+    }
+
+    public async Task<int> GetRestoreProgressAsync(ulong originalChannelId)
+    {
+        var progress = await _context.RestoreProgress
+            .FirstOrDefaultAsync(p => p.OriginalChannelId == originalChannelId);
+        return progress?.RestoredCount ?? 0;
+    }
+
+    public async Task UpdateRestoreProgressAsync(ulong originalChannelId, int count)
+    {
+        var progress = await _context.RestoreProgress
+            .FirstOrDefaultAsync(p => p.OriginalChannelId == originalChannelId);
+        if (progress is null)
+        {
+            progress = new ChannelRestoreProgress { OriginalChannelId = originalChannelId };
+            _context.RestoreProgress.Add(progress);
+        }
+        progress.RestoredCount = count;
+        await _context.SaveChangesAsync();
     }
 
     public async Task SaveChangesAsync()

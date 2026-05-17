@@ -4,6 +4,7 @@ using Backup.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Backup.Infrastructure.Migrations
 {
     [DbContext(typeof(BackupDbContext))]
-    partial class BackupDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260517090904_AddRestoreProgress")]
+    partial class AddRestoreProgress
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -135,7 +138,10 @@ namespace Backup.Infrastructure.Migrations
             modelBuilder.Entity("Backup.Core.Entities.ChannelRestoreProgress", b =>
                 {
                     b.Property<decimal>("OriginalChannelId")
+                        .ValueGeneratedOnAdd()
                         .HasColumnType("decimal(20,0)");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<decimal>("OriginalChannelId"));
 
                     b.Property<int>("RestoredCount")
                         .HasColumnType("int");

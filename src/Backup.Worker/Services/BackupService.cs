@@ -23,11 +23,19 @@ public class BackupService : IHostedService
             .WithDescription("Lists all available backups for this server.")
             .Build(),
 
-        new SlashCommandBuilder()
-            .WithName("backup-restore")
-            .WithDescription("Restores a server backup by its ID.")
+new SlashCommandBuilder()
+            .WithName("restore-layout")
+            .WithDescription("Phase 1: Restores ONLY the roles, categories, and empty channels.")
             .AddOption("id", ApplicationCommandOptionType.String, "The backup ID to restore.", isRequired: true)
-            .AddOption("force", ApplicationCommandOptionType.Boolean, "Force restore on the SAME server (WARNING: Duplicates everything)", isRequired: false)
+            .Build(),
+
+        new SlashCommandBuilder()
+            .WithName("restore-channel")
+            .WithDescription("Phase 2: Injects backed-up messages into a specific channel.")
+            .AddOption("id", ApplicationCommandOptionType.String, "The backup ID.", isRequired: true)
+            .AddOption("original-name", ApplicationCommandOptionType.String, "The original name of the backed-up channel (e.g., general)", isRequired: true)
+            .AddOption("target", ApplicationCommandOptionType.Channel, "The channel to dump the messages into.", isRequired: true)
+            .AddOption("skip", ApplicationCommandOptionType.Integer, "Number of messages to skip if resuming an interrupted restore.", isRequired: false)
             .Build(),
 
         new SlashCommandBuilder()
@@ -94,12 +102,12 @@ public class BackupService : IHostedService
         var level = message.Severity switch
         {
             LogSeverity.Critical => LogLevel.Critical,
-            LogSeverity.Error    => LogLevel.Error,
-            LogSeverity.Warning  => LogLevel.Warning,
-            LogSeverity.Info     => LogLevel.Information,
-            LogSeverity.Verbose  => LogLevel.Debug,
-            LogSeverity.Debug    => LogLevel.Trace,
-            _                    => LogLevel.Information
+            LogSeverity.Error => LogLevel.Error,
+            LogSeverity.Warning => LogLevel.Warning,
+            LogSeverity.Info => LogLevel.Information,
+            LogSeverity.Verbose => LogLevel.Debug,
+            LogSeverity.Debug => LogLevel.Trace,
+            _ => LogLevel.Information
         };
 
         _logger.Log(level, message.Exception, "[Discord] {Source}: {Message}",

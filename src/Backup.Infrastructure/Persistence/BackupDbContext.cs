@@ -12,9 +12,15 @@ public class BackupDbContext : DbContext
     public DbSet<BackupRole> BackupRoles => Set<BackupRole>();
     public DbSet<BackupChannel> BackupChannels => Set<BackupChannel>();
     public DbSet<BackupMessage> BackupMessages => Set<BackupMessage>();
+    public DbSet<ChannelRestoreProgress> RestoreProgress { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
+        modelBuilder.Entity<ChannelRestoreProgress>()
+            .HasKey(e => e.OriginalChannelId);
+        modelBuilder.Entity<ChannelRestoreProgress>()
+            .Property(e => e.OriginalChannelId)
+            .ValueGeneratedNever();
         modelBuilder.ApplyConfiguration(new ServerBackupConfiguration());
         modelBuilder.ApplyConfiguration(new BackupRoleConfiguration());
         modelBuilder.ApplyConfiguration(new BackupChannelConfiguration());

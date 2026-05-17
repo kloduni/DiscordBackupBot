@@ -1,7 +1,7 @@
 using Backup.Core.Interfaces;
 using Backup.Worker.Services;
+using Discord;
 using Discord.WebSocket;
-using Microsoft.Extensions.DependencyInjection;
 
 namespace Backup.Worker.Handlers;
 
@@ -48,8 +48,12 @@ public class SlashCommandHandler
                         await HandleListAsync(command);
                         break;
 
-                    case "backup-restore":
-                        await HandleRestoreAsync(command);
+                    case "restore-layout":
+                        await HandleRestoreLayoutAsync(command);
+                        break;
+
+                    case "restore-channel":
+                        await HandleRestoreChannelAsync(command);
                         break;
 
                     case "backup-resume":
@@ -72,31 +76,33 @@ public class SlashCommandHandler
 
     private async Task HandleListAsync(SocketSlashCommand command)
     {
-        if (command.GuildId is not ulong guildId)
-        {
-            await command.RespondAsync("❌ This command must be used inside a server.", ephemeral: true);
-            return;
-        }
+        await command.DeferAsync(ephemeral: true);
 
         using var scope = _scopeFactory.CreateScope();
         var repo = scope.ServiceProvider.GetRequiredService<IBackupRepository>();
 
-        var backups = await repo.GetBackupsByGuildAsync(guildId);
+        var backups = await repo.GetAllBackupsAsync();
 
         if (backups.Count == 0)
         {
-            await command.RespondAsync("📭 No backups found for this server.", ephemeral: true);
+            await command.FollowupAsync("📭 No backups found in the database.", ephemeral: true);
             return;
         }
 
         var lines = backups.Select(b =>
-            $"• `{b.Id}` — {b.CreatedAt:yyyy-MM-dd HH:mm} UTC");
+            $"• `{b.Id}` — **{b.GuildName}** ({b.CreatedAt:yyyy-MM-dd})");
 
-        var message = $"📋 **Backups for this server ({backups.Count}):**\n" + string.Join("\n", lines);
-        await command.RespondAsync(message, ephemeral: true);
+        var message = $"📋 **All Saved Server Backups ({backups.Count}):**\n" + string.Join("\n", lines);
+
+        if (message.Length > 2000)
+        {
+            message = message.Substring(0, 1995) + "...";
+        }
+
+        await command.FollowupAsync(message, ephemeral: true);
     }
 
-    private async Task HandleRestoreAsync(SocketSlashCommand command)
+    private async Task HandleRestoreLayoutAsync(SocketSlashCommand command)
     {
         var idOption = command.Data.Options.FirstOrDefault(o => o.Name == "id");
         if (idOption?.Value is not string idString || !Guid.TryParse(idString, out var backupId))
@@ -105,10 +111,24 @@ public class SlashCommandHandler
             return;
         }
 
-        var forceOption = command.Data.Options.FirstOrDefault(o => o.Name == "force");
-        bool force = forceOption?.Value is bool f && f;
+        await _restorationService.RestoreLayoutAsync(command, backupId);
+    }
 
-        await _restorationService.ExecuteAsync(command, backupId, force);
+    private async Task HandleRestoreChannelAsync(SocketSlashCommand command)
+    {
+        var idOption = command.Data.Options.FirstOrDefault(o => o.Name == "id");
+        var nameOption = command.Data.Options.FirstOrDefault(o => o.Name == "original-name");
+        var targetOption = command.Data.Options.FirstOrDefault(o => o.Name == "target");
+
+        if (idOption?.Value is not string idString || !Guid.TryParse(idString, out var backupId) ||
+            nameOption?.Value is not string originalName ||
+            targetOption?.Value is not ITextChannel targetChannel)
+        {
+            await command.RespondAsync("❌ Invalid parameters provided.", ephemeral: true);
+            return;
+        }
+
+        await _restorationService.RestoreSingleChannelAsync(command, backupId, originalName, targetChannel);
     }
 
     private async Task HandleResumeAsync(SocketSlashCommand command)
