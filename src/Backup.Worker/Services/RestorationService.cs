@@ -148,24 +148,31 @@ public class RestorationService
 
     private async Task UpdateDashboardAsync(IUserMessage dashboardMessage, ITextChannel targetChannel, int currentCount, int totalExpected)
     {
-        double percentage = Math.Round((double)currentCount / totalExpected * 100, 1);
-        int filledBlocks = Math.Clamp((int)Math.Round(percentage / 10), 0, 10);
-        string progressBar = new string('█', filledBlocks) + new string('░', 10 - filledBlocks);
+        try
+        {
+            double percentage = Math.Round((double)currentCount / totalExpected * 100, 1);
+            int filledBlocks = Math.Clamp((int)Math.Round(percentage / 10), 0, 10);
+            string progressBar = new string('█', filledBlocks) + new string('░', 10 - filledBlocks);
 
-        int remainingMessages = totalExpected - currentCount;
-        TimeSpan eta = TimeSpan.FromMilliseconds(remainingMessages * WebhookMessageDelayMs);
+            int remainingMessages = totalExpected - currentCount;
+            TimeSpan eta = TimeSpan.FromMilliseconds(remainingMessages * WebhookMessageDelayMs);
 
-        string timeString = eta.TotalHours >= 1
-            ? $"{(int)eta.TotalHours}h {eta.Minutes}m"
-            : $"{eta.Minutes}m {eta.Seconds}s";
+            string timeString = eta.TotalHours >= 1
+                ? $"{(int)eta.TotalHours}h {eta.Minutes}m"
+                : $"{eta.Minutes}m {eta.Seconds}s";
 
-        string dashboardContent =
-            $"🚀 **Injecting messages into {targetChannel.Mention}**\n" +
-            $"📊 Progress: `{progressBar}` **{percentage}%**\n" +
-            $"🔢 Count: **{currentCount:N0} / {totalExpected:N0}**\n" +
-            $"⏳ ETA: **{timeString}**";
+            string dashboardContent =
+                $"🚀 **Injecting messages into {targetChannel.Mention}**\n" +
+                $"📊 Progress: `{progressBar}` **{percentage}%**\n" +
+                $"🔢 Count: **{currentCount:N0} / {totalExpected:N0}**\n" +
+                $"⏳ ETA: **{timeString}**";
 
-        await dashboardMessage.ModifyAsync(m => m.Content = dashboardContent);
+            await dashboardMessage.ModifyAsync(m => m.Content = dashboardContent);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning("Failed to update dashboard UI at {Count}/{Total}. Discord API error: {Message}", currentCount, totalExpected, ex.Message);
+        }
     }
 
     private async Task RestoreRolesAsync(SocketGuild guild, ServerBackup backup, CancellationToken ct)

@@ -35,7 +35,6 @@ new SlashCommandBuilder()
             .AddOption("id", ApplicationCommandOptionType.String, "The backup ID.", isRequired: true)
             .AddOption("original-name", ApplicationCommandOptionType.String, "The original name of the backed-up channel (e.g., general)", isRequired: true)
             .AddOption("target", ApplicationCommandOptionType.Channel, "The channel to dump the messages into.", isRequired: true)
-            .AddOption("skip", ApplicationCommandOptionType.Integer, "Number of messages to skip if resuming an interrupted restore.", isRequired: false)
             .Build(),
 
         new SlashCommandBuilder()
